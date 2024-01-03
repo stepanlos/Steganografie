@@ -29,8 +29,9 @@ Dictionary *initialize_dictionary();
 // Přidání záznamu do slovníku
 int add_to_dictionary(Dictionary *dictionary, char last, int parent); //TODO unsined chary všude
 
+
 // Hledání kódu ve slovníku
-int find_in_dictionary(const Dictionary *dictionary, const char last,const int parent);
+int find_in_dictionary(const Dictionary *dictionary, const unsigned char last,const int parent);
 
 //Hledani kódu ve slovníku při dekompresi
 int find_in_dictionary_decompress(Dictionary *dictionary, int key);

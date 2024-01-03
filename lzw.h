@@ -8,13 +8,13 @@
 #define COMPRESSED_SIZE 2048 //Velikost komprimovaného pole
 #define COMPRESSED_INCREMENT_SIZE 4096 //Velikost o kterou se zvětšuje komprimované pole
 
-#define LENGTH_OF_SIGNATURE 5 //Délka signatury
+#define LENGTH_OF_SIGNATURE 6 //Délka signatury
 
 /** storing compressed data **/
 typedef struct {
     int current_length;
     int last_item;
-    unsigned char *compressed;
+    int *compressed;
 }compressed;
 
 /** storing decompressed data **/
@@ -25,7 +25,7 @@ typedef struct {
 }decompressed;
 
 /** function for compressing data **/
-compressed *compress_lzw(char input_array[], int output_array[]); //TODO vstup název souboru
+compressed *compress_lzw(char *filename);
 
 decompressed *decompress_lzw(int *data, int start ,int data_length);
 

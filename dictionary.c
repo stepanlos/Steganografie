@@ -55,6 +55,8 @@ int add_to_dictionary(Dictionary *dictionary, char last, int parent) {
 
 
 
+
+
 /**
  * Funkce pro hledání kódu ve slovníku
  * @param dictionary slovník ve kterém se má hledat
@@ -62,7 +64,7 @@ int add_to_dictionary(Dictionary *dictionary, char last, int parent) {
  * @param parent rodičovský záznam
  * @return index nalezeného záznamu, nebo -1 v případě nenalezení
  */
-int find_in_dictionary(const Dictionary *dictionary, const char last,const int parent) {
+int find_in_dictionary(const Dictionary *dictionary, const unsigned char last,const int parent) {
 
     // Hledání záznamu
     for (int i = 0; i < dictionary->size; i++) {
@@ -98,8 +100,8 @@ char *string_from_index(Dictionary *d, int index, int *len) {
     unsigned char *str = NULL;
     int i = index;
 
-    while (index != -1) {
-        index = d->entries[index].parent;
+    while (d->entries[i].parent != -1) {
+        i = d->entries[i].parent;
         (*len)++;
     }
     (*len)++;
@@ -139,7 +141,7 @@ char *reverse_string(char *str, int len) {
  * @return 1 v případě úspěchu, nebo 0 v případě chyby
  */
 int free_dictionary(Dictionary **dictionary) {
-    if (dictionary == NULL) {
+    if (*dictionary == NULL) {
         // TODO handle invalid dictionary
         return 0;
     }
@@ -149,9 +151,12 @@ int free_dictionary(Dictionary **dictionary) {
 //        free((*dictionary)->entries[i]);
 //
 //    }
+    printf("pred\n");
     // Uvolnění slovníku
-    free((*dictionary)->entries);
-    free(*dictionary);
+//    free((*dictionary)->entries);
+    printf("po\n");
+    free(*dictionary); //tento radek se neprovede
+    printf("po2\n");
     *dictionary = NULL;
 
     printf("Slovnik uvolnen\n");
