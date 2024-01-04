@@ -1,7 +1,7 @@
 //
 // Created by Štěpán on 02.01.2024.
 //
-#include "crc.h"
+#include "crc_check.h"
 
 /**
  * Funkce pro výpočet CRC32
@@ -24,7 +24,7 @@ uint32_t update_crc(uint32_t crc, unsigned char byte) {
  * @param length délka
  * @return součet CRC32
  */
-int sum_crc(int *array, int start, int length) {
+int sumr_crc(int *array, int start, int length) {
     uint32_t crc = 0xFFFFFFFF;
     for (int i = 0; i < length; i++) {
         crc = update_crc(crc, (unsigned char) array[i]);

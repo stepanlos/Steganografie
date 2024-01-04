@@ -21,26 +21,26 @@ typedef struct {
 typedef struct {
     Entry entries[DICTIONARY_SIZE];
     int size;
-} Dictionary;
+} dictionary;
 
 // Inicializace slovníku
-Dictionary *initialize_dictionary();
+dictionary *initialize_dictionary();
 
 // Přidání záznamu do slovníku
-int add_to_dictionary(Dictionary *dictionary, char last, int parent); //TODO unsined chary všude
+int add_to_dictionary(dictionary *dictionary, char last, int parent); //TODO unsined chary všude
 
 
 // Hledání kódu ve slovníku
-int find_in_dictionary(const Dictionary *dictionary, const unsigned char last,const int parent);
+int find_in_dictionary(const dictionary *dictionary, const unsigned char last, const int parent);
 
 //Hledani kódu ve slovníku při dekompresi
-int find_in_dictionary_decompress(Dictionary *dictionary, int key);
+int find_in_dictionary_decompress(dictionary *dictionary, int key);
 
-char *string_from_index(Dictionary *d, int index, int *len);
+char *string_from_index(dictionary *d, int index, int *len);
 char *reverse_string(char *str, int len);
 
 //uvolnění slovníku
-int free_dictionary(Dictionary **dictionary);
+int free_dictionary(dictionary **dictionary);
 
 
 #endif

@@ -5,7 +5,8 @@
 #include "dictionary.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "crc.h"
+#include "crc_check.h"
+#include "io_manager.h"
 
 
 /**
@@ -16,12 +17,14 @@
 compressed *compressed_create() {
     compressed *c = (compressed *) malloc(sizeof(compressed));
     if (c == NULL) {
+        exit_value = MALLOC_FAIL;
         return NULL;
     }
 
     c->compressed = (int *) malloc(COMPRESSED_SIZE * sizeof(int));
     if (c->compressed == NULL) {
         free(c);
+        exit_value = MALLOC_FAIL;
         return NULL;
     }
     c->current_length = COMPRESSED_SIZE;
@@ -42,6 +45,7 @@ int compressed_add(compressed *c, int item) {
         if (!tmp){
             printf("Chyba při realokaci paměti.\n");
             compressed_free(&c);
+            exit_value = MALLOC_FAIL;
             return FALSE;
         }
         c->current_length += COMPRESSED_INCREMENT_SIZE;
@@ -77,11 +81,13 @@ decompressed *decompressed_create() {
     decompressed *tmp = (decompressed *) malloc(sizeof(decompressed));
     if (tmp == NULL) {
         return NULL;
+        exit_value = MALLOC_FAIL;
     }
 
     tmp->decompressed = (unsigned char *) malloc(COMPRESSED_SIZE * sizeof(unsigned char));
     if (tmp->decompressed == NULL) {
         free(tmp);
+        exit_value = MALLOC_FAIL;
         return NULL;
     }
 
@@ -105,6 +111,7 @@ int decompressed_add(decompressed *decomp, unsigned char *c, int c_length) {
         if (!tmp){
             printf("Chyba při realokaci paměti.\n");
             decompressed_free(&decomp);
+            exit_value = MALLOC_FAIL;
             return FALSE;
         }
         decomp->current_length += COMPRESSED_INCREMENT_SIZE;
@@ -163,13 +170,14 @@ compressed *compress_lzw(char *filename){
     }
 
     //initialize slovníku
-    Dictionary *dictionary = NULL;
+    dictionary *dictionary = NULL;
     dictionary = initialize_dictionary();
 
     //ošetření chyby při inicializaci slovníku
     if (dictionary == NULL) {
         printf("Chyba při inicializaci slovníku.\n");
         return NULL;
+
     }
 
     //inicializace komprimovaného pole
@@ -189,6 +197,7 @@ compressed *compress_lzw(char *filename){
         printf("Chyba při otevření souboru56.\n");
         compressed_free(&c);
         free_dictionary(&dictionary);
+        exit_value = FILE_OPEN_FAIL;
         return NULL;
     }
 
@@ -199,6 +208,7 @@ compressed *compress_lzw(char *filename){
         printf("Soubor je prázdný.\n");
         compressed_free(&c);
         free_dictionary(&dictionary);
+        exit_value = INVALID_ARGS_OR_FILES;
         return NULL;
     }
     fseek(file, 0, SEEK_SET);
@@ -210,6 +220,7 @@ compressed *compress_lzw(char *filename){
         compressed_free(&c);
         free_dictionary(&dictionary);
         fclose(file);
+        exit_value = MALLOC_FAIL;
         return NULL;
     }
 
@@ -221,6 +232,7 @@ compressed *compress_lzw(char *filename){
         free_dictionary(&dictionary);
         fclose(file);
         free(input_buf);
+        exit_value = FILE_READ_FAIL;
         return NULL;
     }
 
@@ -272,16 +284,13 @@ compressed *compress_lzw(char *filename){
     c->compressed[LENGTH_OF_SIGNATURE - 2] = c->last_item - LENGTH_OF_SIGNATURE;
     
     int *raw_data = (int *) malloc((c->last_item - LENGTH_OF_SIGNATURE) * sizeof(int));
-    printf("delka dat: %d\n", c->last_item - LENGTH_OF_SIGNATURE);
     for (int j = 0; j < c->last_item - LENGTH_OF_SIGNATURE; j++) {
         raw_data[j] = c->compressed[j + LENGTH_OF_SIGNATURE];
-        printf("%d\n", j);
+//        printf("%d\n", j);
     }
-    int crc = sum_crc(raw_data,0, c->last_item - LENGTH_OF_SIGNATURE);
+    int crc = sumr_crc(raw_data,0, c->last_item - LENGTH_OF_SIGNATURE);
 
     c->compressed[LENGTH_OF_SIGNATURE - 1] = crc;
-
-    printf("Komprese dokončena.\n");
 
 
     free_dictionary(&dictionary);
@@ -306,6 +315,7 @@ decompressed *decompress_lzw(int *data, int start ,int data_length) {
     str = malloc(sizeof(unsigned char));
     if (str == NULL) {
         printf("Chyba při alokaci paměti.\n");
+        exit_value = MALLOC_FAIL;
         return NULL;
     }
     if (data == NULL || !data_length){
@@ -314,7 +324,7 @@ decompressed *decompress_lzw(int *data, int start ,int data_length) {
     }
 
     //inicializace slovníku
-    Dictionary *dictionary = NULL;
+    dictionary *dictionary = NULL;
     dictionary = initialize_dictionary();
     if (dictionary == NULL) {
         printf("Chyba při inicializaci slovníku.\n");
@@ -335,10 +345,10 @@ decompressed *decompress_lzw(int *data, int start ,int data_length) {
     //dekompresní algoritmus
     oldcd = data[start];
     decompressed_add(decomp, (unsigned char *) &oldcd, 1);
-    printf("datalength: %d\n", data_length);
-    printf("code: %d\n", code);
+//    printf("datalength: %d\n", data_length);
+//    printf("code: %d\n", code);
 
-    for(i = start + 1; i < data_length + LENGTH_OF_SIGNATURE; i++){
+    for(i = start + 1; i < data_length /*+ LENGTH_OF_SIGNATURE*/; i++){
         newcd = data[i];
         //printf("i: %d -> znak %d \n", i, newcd);
         if (find_in_dictionary_decompress(dictionary, newcd) == -1){
