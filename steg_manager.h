@@ -5,8 +5,7 @@
 #ifndef PROJEKT_STEG_MANAGER_H
 #define PROJEKT_STEG_MANAGER_H
 
-#include "bmp_process.h"
-#include "png_process.h"
+
 
 typedef struct {
     int *hidden_data;
@@ -21,5 +20,7 @@ void hidden_content_free(hidden_content **content);
 void hide_data(char *payload, char *image, char file_type);
 
 void extract_data(char *image, char *payload, char file_type);
+
+
 
 #endif //PROJEKT_STEG_MANAGER_H

@@ -4,6 +4,7 @@
 #include "lzw.h"
 #include <stdlib.h>
 #include "bmp_process.h"
+#include "png_process.h"
 //#include <libpng16/png.h>
 //#include <png.h>
 int exit_value = RUN_OK;
@@ -44,34 +45,34 @@ int main(int argc, char *argv[]) {
 
 
 
-    bmp_organised *image_bmp = read_image_bmp(image);
-    if (!image_bmp) {
+    png_organised *image_png = read_image_png(image);
+    if (!image_png) {
         printf("ERROR: Image read failed!\n");
         return 1;
     }
-    change_blue_bmp(image_bmp, result);
+    //change_blue_png(image_png, result);
 
-    save_image_bmp(image_bmp, "output.bmp");
+    save_image_png(image_png, "output.png");
 
-    bmp_organised  *image_bmp2 = read_image_bmp("output.bmp");
+//    png_organised  *image_png2 = read_image_png("output.png");
 
-    hidden_content *hic_c  = unload_blue_bmp(image_bmp2);
-
-//    for (int i = 0; i < hic_c->hidden_data_size; i++) {
-//        printf("%d ", hic_c->hidden_data[i]);
+//    hidden_content *hic_c  = unload_blue_png(image_png2);
+//
+////    for (int i = 0; i < hic_c->hidden_data_size; i++) {
+////        printf("%d ", hic_c->hidden_data[i]);
+////    }
+//
+//    decompressed *decomp = decompress_lzw(hic_c->hidden_data, LENGTH_OF_SIGNATURE, hic_c->hidden_data_size);
+//
+//    printf("dekomprese dokoncena \n");
+//    FILE *f = fopen("vystup.bmp", "wb");
+//    if (!f) {
+//        printf("ERROR: File open failed!\n");
+//        return 1;
 //    }
-
-    decompressed *decomp = decompress_lzw(hic_c->hidden_data, LENGTH_OF_SIGNATURE, hic_c->hidden_data_size);
-
-    printf("dekomprese dokoncena \n");
-    FILE *f = fopen("vystup.bmp", "wb");
-    if (!f) {
-        printf("ERROR: File open failed!\n");
-        return 1;
-    }
-    fwrite(decomp->decompressed, sizeof(char), decomp->last_item, f);
-    fclose(f);
-    printf("pamet uvolnena\n");
+//    fwrite(decomp->decompressed, sizeof(char), decomp->last_item, f);
+//    fclose(f);
+//    printf("pamet uvolnena\n");
 
    // printf("délka dat: %d\n", result->last_item);
 

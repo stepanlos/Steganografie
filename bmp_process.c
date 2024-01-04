@@ -184,7 +184,7 @@ int change_blue_bmp(bmp_organised *image, compressed *data) {
 
     //uložení signatury
 
-    for (i = 0; i < signature_size_b * 3; i += 3) {
+    for (i = 0; i < signature_size_b * BGR; i += BGR) {
 //        printf("Blue: %d =>", image->pixel_data[i]);
 //
 //        for (int bit = 7; bit >= 0; bit--) {
@@ -195,7 +195,7 @@ int change_blue_bmp(bmp_organised *image, compressed *data) {
 
 //        image->pixel_data[i] &= ~(0x01);  // Nulování nejméně významného bitu
         image->pixel_data[i] &= 0xFE;
-        image->pixel_data[i] |= (data->compressed[i / (3 * INT_BIT_SIZE)] >> ((i / 3) % INT_BIT_SIZE) ) & 0x1;
+        image->pixel_data[i] |= (data->compressed[i / (BGR * INT_BIT_SIZE)] >> ((i / BGR) % INT_BIT_SIZE) ) & 0x1;
 //        printf(" %d => ", image->pixel_data[i]);
 
 //        for (int bit = 7; bit >= 0; bit--) {
@@ -212,11 +212,11 @@ int change_blue_bmp(bmp_organised *image, compressed *data) {
     for (i = SIGNATURE_SIZE; i < data->last_item; i++) {
         temp = data->compressed[i];
         temp &= 0xFFF;
-        for(int j = 0; j < 12 * 3 ; j += 3) {
+        for(int j = 0; j < COMPRESSED_BIT_SIZE * BGR ; j += BGR) {
             image->pixel_data[shift + j] &= 0xFE;
-            image->pixel_data[shift + j] |= (temp >> (j / 3)) & 0x1;
+            image->pixel_data[shift + j] |= (temp >> (j / BGR)) & 0x1;
         }
-        shift += 12 * 3;
+        shift += COMPRESSED_BIT_SIZE * BGR;
     }
 
     return 1;
@@ -240,10 +240,10 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
     int shift = 0;
     for(; i < SIGNATURE_SIZE; i ++) {
 //        extracted_data_temp[i / (3 * 32)] |= (image->pixel_data[i] & 0x1) << ((i / 3) % 32);
-        for (int j = 0; j < 96; j += 3) {
-            extracted_data_temp[i] |= (image->pixel_data[shift + j] & 0x1) << (j / 3);
+        for (int j = 0; j < BGR * INT_BIT_SIZE; j += BGR) {
+            extracted_data_temp[i] |= (image->pixel_data[shift + j] & 0x1) << (j / BGR);
         }
-        shift += 96;
+        shift += BGR * INT_BIT_SIZE;
     }
 
     //výpis extracted_data_temp
@@ -270,10 +270,10 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
     printf("i = %d\n", i);
     //načtení dat z obrázku do hidden_content
     for(; i < hidden->hidden_data_size; i ++) {
-        for (int j = 0; j < 36; j += 3) {
-            hidden->hidden_data[i] |= (image->pixel_data[shift + j] & 0x1) << (j / 3);
+        for (int j = 0; j < BGR * COMPRESSED_BIT_SIZE; j += BGR) {
+            hidden->hidden_data[i] |= (image->pixel_data[shift + j] & 0x1) << (j / BGR);
         }
-        shift += 36;
+        shift += BGR * COMPRESSED_BIT_SIZE;
     }
     printf("i = %d\n", i);
 
