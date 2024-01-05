@@ -102,7 +102,7 @@ int save_image_bmp(bmp_organised *image, const char *filename) {
     if (file == NULL) {
         printf("Error while opening file\n");
         exit_value = INVALID_ARGS_OR_FILES;
-        return 0;
+        return FALSE;
     }
 
     //zapsání hlavičky
@@ -111,11 +111,11 @@ int save_image_bmp(bmp_organised *image, const char *filename) {
         printf("Error while writing bmp file\n");
         exit_value = FILE_WRITE_FAIL;
         fclose(file);
-        return 0;
+        return FALSE;
     }
 
     //zapsání pixelů
-    int width = (4 - (3 * abs(image->info_properties->width)) % 4) % 4;
+    int width = (PX_WR_MOD - (BGR * abs(image->info_properties->width)) % PX_WR_MOD) % PX_WR_MOD;
 
     uint8_t *row = (uint8_t *) malloc(image->info_properties->width * BGR);
 
@@ -123,7 +123,7 @@ int save_image_bmp(bmp_organised *image, const char *filename) {
         printf("Error while allocating memory for bmp image\n");
         exit_value = MALLOC_FAIL;
         fclose(file);
-        return 0;
+        return FALSE;
     }
 
 
@@ -144,14 +144,14 @@ int save_image_bmp(bmp_organised *image, const char *filename) {
             exit_value = FILE_WRITE_FAIL;
             fclose(file);
             free(row);
-            return 0;
+            return FALSE;
         }
 
     }
 
     fclose(file);
     free(row);
-    return 1;
+    return TRUE;
 }
 
 
@@ -175,7 +175,7 @@ int change_blue_bmp(bmp_organised *image, compressed *data) {
     if (data_size > image->pixel_data_size) {
         printf("Error while hiding data in bmp file\n");
         exit_value = IMAGE_TOO_SMALL;
-        return 0;
+        return FALSE;
     }
 
     printf("compresed %d\n", data->compressed[6]);
@@ -220,7 +220,7 @@ int change_blue_bmp(bmp_organised *image, compressed *data) {
         shift += COMPRESSED_BIT_SIZE * BGR;
     }
 
-    return 1;
+    return TRUE;
 }
 
 
@@ -253,7 +253,7 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
 //    }
 
     //kontrola hlavičky, zda je na prvních 4 místech "KARI"
-    if (extracted_data_temp[0] != 75 || extracted_data_temp[1] != 65 || extracted_data_temp[2] != 82 || extracted_data_temp[3] != 73) {
+    if (extracted_data_temp[0] != CHAR_K || extracted_data_temp[1] != CHAR_A || extracted_data_temp[2] != CHAR_R || extracted_data_temp[3] != CHAR_I) {
         printf("Error while extracting data from bmp file\n");
         exit_value = NO_HIDDEN_DATA;
         free(extracted_data_temp);
@@ -288,13 +288,13 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
 
 
     int *raw_data = (int *) malloc((hidden->hidden_data_size - SIGNATURE_SIZE) * sizeof(int));
-    for (int j = 6; j < hidden->hidden_data_size; j++) {
+    for (int j = SIGNATURE_SIZE; j < hidden->hidden_data_size; j++) {
         raw_data[j - SIGNATURE_SIZE] = hidden->hidden_data[j];
     }
 
     printf("hidden data size: %d\n", hidden->hidden_data_size);
-    int crc_data = hidden->hidden_data[5];
-    hidden->hidden_data[5] = 0;
+    int crc_data = hidden->hidden_data[CRC_POS];
+    hidden->hidden_data[CRC_POS] = 0;
 
     //kontrola crc
     int crc_cntl = sumr_crc(raw_data, 0, hidden->hidden_data_size - SIGNATURE_SIZE);
