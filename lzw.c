@@ -143,24 +143,6 @@ void decompressed_free(decompressed **decomp) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 compressed *compress_lzw(char *filename){
     int pref, suf, indx;
     int i = 0;
@@ -281,7 +263,7 @@ compressed *compress_lzw(char *filename){
     printf("Konec komprese.\n");
 
     //uložení délky dat
-    c->compressed[LENGTH_OF_SIGNATURE - 2] = c->last_item - LENGTH_OF_SIGNATURE;
+    c->compressed[LENGTH_OF_DATA] = c->last_item - LENGTH_OF_SIGNATURE;
     
     int *raw_data = (int *) malloc((c->last_item - LENGTH_OF_SIGNATURE) * sizeof(int));
     for (int j = 0; j < c->last_item - LENGTH_OF_SIGNATURE; j++) {
@@ -300,7 +282,7 @@ compressed *compress_lzw(char *filename){
 //    printf("c last intem: %d\n", c->last_item);
     int crc = sumr_crc(raw_data,0, c->last_item - LENGTH_OF_SIGNATURE);
 
-    c->compressed[LENGTH_OF_SIGNATURE - 1] = crc;
+    c->compressed[CRC_POSITON] = crc;
 
 
     free_dictionary(&dictionary);
@@ -399,18 +381,7 @@ decompressed *decompress_lzw(int *data, int start ,int data_length) {
 
         oldcd = newcd;
         len = 0;
-        //vypis vsech promennych
-//        printf("oldcd: %d\n", oldcd);
-//        printf("newcd: %d\n", newcd);
-//        printf("code: %d\n", code);
-//        printf("len: %d\n", len);
-//        printf("str: %s\n", str);
-//        printf("i: %d\n", i);
-//        printf("data_length: %d\n", data_length);
-//        printf("decomp->last_item: %d\n", decomp->last_item);
-//        printf("decomp->current_length: %d\n", decomp->current_length);
-//        printf("decomp->decompressed: %s\n", decomp->decompressed);
-//        printf("dictionary->size: %d\n", dictionary->size);
+
 
     }
     free(str);
