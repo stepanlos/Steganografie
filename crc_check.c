@@ -11,7 +11,7 @@
  */
 uint32_t update_crc(uint32_t crc, unsigned char byte) {
     crc = crc ^ (uint32_t) byte;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < CHAR_SIZE; i++) {
         crc = (crc >> 1) ^ ((crc & 1) * 0xEDB88320);
     }
     return crc;
