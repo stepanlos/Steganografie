@@ -252,7 +252,7 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
     }
 
 
-    hidden_content *hidden = hiddenContent_create(extracted_data_temp[4] + SIGNATURE_SIZE);
+    hidden_content *hidden = hidden_content_create(extracted_data_temp[4] + SIGNATURE_SIZE);
     printf("hidden->hidden_data_size: %d\n", hidden->hidden_data_size);
 
     //načtení dat z extracted_data_temp do hidden_content

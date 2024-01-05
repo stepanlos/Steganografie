@@ -10,38 +10,37 @@
 
 
 
-png_organised *read_image_png(const char *file_name) {
-    unsigned int y;
-    FILE *file = fopen(file_name, "rb");
 
-    if (!file) {
-        printf("ERROR: File %s not found!\n", file_name);
-        exit_value = EXIT_FILE_NOT_FOUND;
+png_organised *read_image_png(const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        printf("Error while opening file\n");
+        exit_value = INVALID_ARGS_OR_FILES;
         return NULL;
     }
 
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png) {
+    if (png == NULL) {
+        printf("Error while creating png struct\n");
+        exit_value = MALLOC_FAIL;
         fclose(file);
-        printf("ERROR: Memory allocation failed!\n");
-        exit_value = EXIT_MEMORY_ALLOCATION;
         return NULL;
     }
 
     png_infop info = png_create_info_struct(png);
-    if (!info) {
+    if (info == NULL) {
+        printf("Error while creating png info struct\n");
+        exit_value = MALLOC_FAIL;
         fclose(file);
         png_destroy_read_struct(&png, NULL, NULL);
-        printf("ERROR: Memory allocation failed!\n");
-        exit_value = EXIT_MEMORY_ALLOCATION;
         return NULL;
     }
 
     if (setjmp(png_jmpbuf(png))) {
+        printf("Error while setting png jump buffer\n");
+        exit_value = INVALID_IMAGE_FORMAT;
         fclose(file);
         png_destroy_read_struct(&png, &info, NULL);
-        printf("ERROR: Error during reading PNG file!\n");
-        exit_value = 2;
         return NULL;
     }
 
@@ -52,255 +51,106 @@ png_organised *read_image_png(const char *file_name) {
     png_byte color_type = png_get_color_type(png, info);
     png_byte bit_depth = png_get_bit_depth(png, info);
 
-//    printf("color type %d, bit_depth %d\n", color_type, bit_depth);
-
-    // kontrola jestli je rgb 24 bitu na pixel, jestli je to png a ne jiny format, jestli je to RGB
     if (color_type != PNG_COLOR_TYPE_RGB || bit_depth != 8) {
+        printf("Error while reading png file\n");
+        exit_value = INVALID_IMAGE_FORMAT;
         fclose(file);
         png_destroy_read_struct(&png, &info, NULL);
-        printf("ERROR: File %s is not RGB 24 bit PNG file!\n", file_name);
-        exit_value = 2;
         return NULL;
     }
-
 
     png_bytep row_pointers = malloc(sizeof(png_bytep) * png_get_rowbytes(png, info) * png_get_image_height(png, info));
-    if (!row_pointers) {
+    if (row_pointers == NULL) {
+        printf("Error while allocating memory for png image\n");
+        exit_value = MALLOC_FAIL;
         fclose(file);
         png_destroy_read_struct(&png, &info, NULL);
-        printf("ERROR: Memory allocation failed!\n");
-        exit_value = EXIT_MEMORY_ALLOCATION;
         return NULL;
     }
 
-    // data z obrazku do row_pointers
-    int width = (int) png_get_image_width(png, info);
+
+    int width =(int) png_get_image_width(png, info);
     int rowbytes = (int) png_get_rowbytes(png, info);
-    for (y = 0; y < png_get_image_height(png, info); y++) {
-//        row_pointers[y * width * RGB_SIZE]
-        png_read_row(png, row_pointers + y * rowbytes, NULL);
+    for (int i = 0; i < png_get_image_height(png, info); i++) {
+        png_read_row(png, row_pointers + i * rowbytes, NULL);
     }
 
-    png_organised *res_data = malloc(sizeof(png_organised));
-    if (!res_data) {
+    png_organised *image = malloc(sizeof(png_organised));
+    if (image == NULL) {
+        printf("Error while allocating memory for png image\n");
+        exit_value = MALLOC_FAIL;
         fclose(file);
         png_destroy_read_struct(&png, &info, NULL);
         free(row_pointers);
-        printf("ERROR: Memory allocation failed!\n");
-        exit_value = EXIT_MEMORY_ALLOCATION;
         return NULL;
     }
+    int height = (int) png_get_image_height(png, info);
 
-    res_data->row_pointers = row_pointers;
-    res_data->width = width;
-    res_data->height = (int) png_get_image_height(png, info);
 
+    image->width = width;
+    image->height = height;
+    image->row_pointers = row_pointers;
 
     fclose(file);
     png_destroy_read_struct(&png, &info, NULL);
 
-    return res_data /*NULL*/;
+    return image;
 }
 
-//png_organised *read_image_png(const char *filename) {
-//    FILE *file = fopen(filename, "rb");
-//    if (file == NULL) {
-//        printf("Error while opening file\n");
-//        exit_value = INVALID_ARGS_OR_FILES;
-//        return NULL;
-//    }
-//
-//    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-//    if (png == NULL) {
-//        printf("Error while creating png struct\n");
-//        exit_value = MALLOC_FAIL;
-//        fclose(file);
-//        return NULL;
-//    }
-//
-//    png_infop info = png_create_info_struct(png);
-//    if (info == NULL) {
-//        printf("Error while creating png info struct\n");
-//        exit_value = MALLOC_FAIL;
-//        fclose(file);
-//        png_destroy_read_struct(&png, NULL, NULL);
-//        return NULL;
-//    }
-//
-//    if (setjmp(png_jmpbuf(png))) {
-//        printf("Error while setting png jump buffer\n");
-//        exit_value = INVALID_IMAGE_FORMAT;
-//        fclose(file);
-//        png_destroy_read_struct(&png, &info, NULL);
-//        return NULL;
-//    }
-//
-//    png_init_io(png, file);
-//
-//    png_read_info(png, info);
-//
-//    png_byte color_type = png_get_color_type(png, info);
-//    png_byte bit_depth = png_get_bit_depth(png, info);
-//
-//    if (color_type != PNG_COLOR_TYPE_RGB || bit_depth != 8) {
-//        printf("Error while reading png file\n");
-//        exit_value = INVALID_IMAGE_FORMAT;
-//        fclose(file);
-//        png_destroy_read_struct(&png, &info, NULL);
-//        return NULL;
-//    }
-//
-//    png_bytep row_pointers = malloc(sizeof(png_bytep) * png_get_rowbytes(png, info) * png_get_image_height(png, info));
-//    if (row_pointers == NULL) {
-//        printf("Error while allocating memory for png image\n");
-//        exit_value = MALLOC_FAIL;
-//        fclose(file);
-//        png_destroy_read_struct(&png, &info, NULL);
-//        return NULL;
-//    }
-//
-//
-//    int width =(int) png_get_image_width(png, info);
-//    int rowbytes = (int) png_get_rowbytes(png, info);
-//    for (int i = 0; i < png_get_image_height(png, info); i++) {
-//        png_read_row(png, row_pointers + i * rowbytes, NULL);
-//    }
-//
-//    png_organised *image = malloc(sizeof(png_organised));
-//    if (image == NULL) {
-//        printf("Error while allocating memory for png image\n");
-//        exit_value = MALLOC_FAIL;
-//        fclose(file);
-//        png_destroy_read_struct(&png, &info, NULL);
-//        free(row_pointers);
-//        return NULL;
-//    }
-//    int height = (int) png_get_image_height(png, info);
-//
-//
-//    image->width = width;
-//    image->height = height;
-//    image->row_pointers = row_pointers;
-//
-//    fclose(file);
-//    png_destroy_read_struct(&png, &info, NULL);
-//
-//    return image;
-//}
 
-int save_image_png(png_organised *png, const char *file_name) {
-    FILE *file = fopen(file_name, "wb");
 
-    // kontrola, jestli se soubor otevrel
-    if (!file) {
-        printf("ERROR: File %s not found!\n", file_name);
-        exit_value = EXIT_FILE_NOT_FOUND;
-        return FALSE;
+int save_image_png(png_organised *image, const char *filename) {
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL) {
+        printf("Error while opening file\n");
+        exit_value = INVALID_ARGS_OR_FILES;
+        return 0;
     }
 
-    png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png_ptr) {
+    png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png == NULL) {
+        printf("Error while creating png struct\n");
+        exit_value = MALLOC_FAIL;
         fclose(file);
-        printf("ERROR: Memory allocation failed!\n");
-        exit_value = EXIT_MEMORY_ALLOCATION;
-        return FALSE;
+        return 0;
     }
 
-    png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr) {
+    png_infop info = png_create_info_struct(png);
+    if (info == NULL) {
+        printf("Error while creating png info struct\n");
+        exit_value = MALLOC_FAIL;
         fclose(file);
-        png_destroy_write_struct(&png_ptr, NULL);
-        printf("ERROR: Memory allocation failed!\n");
-        exit_value = EXIT_MEMORY_ALLOCATION;
-        return FALSE;
+        png_destroy_write_struct(&png, NULL);
+        return 0;
     }
 
-    if (setjmp(png_jmpbuf(png_ptr))) {
+    if (setjmp(png_jmpbuf(png))) {
+        printf("Error while setting png jump buffer\n");
+        exit_value = INVALID_IMAGE_FORMAT;
         fclose(file);
-        png_destroy_write_struct(&png_ptr, &info_ptr);
-        printf("ERROR: Error during writing PNG file!\n");
-        exit_value = EXIT_FILE_READING;
-        return FALSE;
+        png_destroy_write_struct(&png, &info);
+        return 0;
     }
 
-    png_init_io(png_ptr, file);
+    png_init_io(png, file);
 
-    png_set_IHDR(png_ptr,
-                 info_ptr,
-                 png->width, png->height,
-                 8,
-                 PNG_COLOR_TYPE_RGB,
-                 PNG_INTERLACE_NONE,
-                 PNG_COMPRESSION_TYPE_DEFAULT,
+    png_set_IHDR(png, info, image->width, image->height, 8, PNG_COLOR_TYPE_RGB,
+                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
                  PNG_FILTER_TYPE_DEFAULT);
-//    PNG_COMPRESSION_TYPE_BASE
 
-    png_write_info(png_ptr, info_ptr);
+    png_write_info(png, info);
 
-    for (int i = 0; i < png->height; i++) {
-        png_write_row(png_ptr, png->row_pointers + i * png->width * 3);
+    for (int i = 0; i < image->height; i++) {
+        png_write_row(png, image->row_pointers + i * image->width * RGB);
     }
 
-    png_write_end(png_ptr, NULL);
+    png_write_end(png, NULL);
 
     fclose(file);
-    png_destroy_write_struct(&png_ptr, &info_ptr);
+    png_destroy_write_struct(&png, &info);
 
     return 1;
 }
-
-//int save_image_png(png_organised *image, const char *filename) {
-//    FILE *file = fopen(filename, "wb");
-//    if (file == NULL) {
-//        printf("Error while opening file\n");
-//        exit_value = INVALID_ARGS_OR_FILES;
-//        return 0;
-//    }
-//
-//    png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-//    if (png == NULL) {
-//        printf("Error while creating png struct\n");
-//        exit_value = MALLOC_FAIL;
-//        fclose(file);
-//        return 0;
-//    }
-//
-//    png_infop info = png_create_info_struct(png);
-//    if (info == NULL) {
-//        printf("Error while creating png info struct\n");
-//        exit_value = MALLOC_FAIL;
-//        fclose(file);
-//        png_destroy_write_struct(&png, NULL);
-//        return 0;
-//    }
-//
-//    if (setjmp(png_jmpbuf(png))) {
-//        printf("Error while setting png jump buffer\n");
-//        exit_value = INVALID_IMAGE_FORMAT;
-//        fclose(file);
-//        png_destroy_write_struct(&png, &info);
-//        return 0;
-//    }
-//
-//    png_init_io(png, file);
-//
-//    png_set_IHDR(png, info, image->width, image->height, 8, PNG_COLOR_TYPE_RGB,
-//                 PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT,
-//                 PNG_FILTER_TYPE_DEFAULT);
-//
-//    png_write_info(png, info);
-//
-//    for (int i = 0; i < image->height; i++) {
-//        png_write_row(png, image->row_pointers + i * image->width * RGB);
-//    }
-//
-//    png_write_end(png, NULL);
-//
-//    fclose(file);
-//    png_destroy_write_struct(&png, &info);
-//
-//    return 1;
-//}
 
 
 void free_image_png(png_organised **image) {
@@ -327,8 +177,25 @@ int change_blue_png(png_organised *image, compressed *compressed_data) {
     //zapsání signatury
     int i;
     for(i = 2; i < signature_size_b * RGB; i += RGB) {
+//        printf("Blue: %d =>", image->row_pointers[i]);
+//
+//        for (int bit = 7; bit >= 0; bit--) {
+//            int bit_value = (image->row_pointers[i] >> bit) & 0x1;
+//            printf(" %d", bit_value);
+//        }
+//        printf(" => ");
+
         image->row_pointers[i] &= 0xFE;
         image->row_pointers[i] |= (compressed_data->compressed[i / (RGB * INT_BIT_SIZE_P)] >> ((i / RGB) % INT_BIT_SIZE_P)) & 0x1;
+
+//        printf(" %d => ", image->row_pointers[i]);
+
+//        for (int bit = 7; bit >= 0; bit--) {
+//            int bit_value = (image->row_pointers[i] >> bit) & 0x1;
+//            printf(" %d", bit_value);
+//        }
+//        printf("\n");
+
     }
 
     int temp, shift;
@@ -338,10 +205,16 @@ int change_blue_png(png_organised *image, compressed *compressed_data) {
     for (i = SIGNATURE_SIZE_P; i < compressed_data->last_item; i++) {
         temp = compressed_data->compressed[i];
         temp &= 0xFFF;
+
+//        printf("temp: %d => \n", temp);
         for (int j = 0; j < COMPRESSED_BIT_SIZE_P * RGB; j += RGB) {
+//            printf("Blue: %d =>", image->row_pointers[shift + j]);
             image->row_pointers[shift + j] &= 0xFE;
             image->row_pointers[shift + j] |= (temp >> (j / RGB)) & 0x1;
+//            printf(" %d \n", image->row_pointers[shift + j]);
         }
+
+
         shift += COMPRESSED_BIT_SIZE_P * RGB;
     }
 
@@ -363,7 +236,7 @@ hidden_content *unload_blue_png(png_organised *image) {
 
     //načtení signatury z obrázku do extracted_data_temp
     int i = 0;
-    int shift = 0;
+    int shift = 2;
     for(; i < SIGNATURE_SIZE_P; i ++) {
         for (int j = 0; j < RGB * INT_BIT_SIZE_P; j += RGB) {
             extracted_data_temp[i] |= (image->row_pointers[shift + j] & 0x1) << (j / RGB);
@@ -376,7 +249,7 @@ hidden_content *unload_blue_png(png_organised *image) {
         printf("%d ",  extracted_data_temp[j]);
     }
 
-    hidden_content *hidden = hiddenContent_create(extracted_data_temp[4] + SIGNATURE_SIZE_P);
+    hidden_content *hidden = hidden_content_create(extracted_data_temp[4] + SIGNATURE_SIZE_P);
     printf("hidden->hidden_data_size: %d\n", hidden->hidden_data_size);
 
     //načtení dat z extracted_data_temp do hidden_content

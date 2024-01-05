@@ -13,13 +13,15 @@ typedef struct {
 } hidden_content;
 
 
-hidden_content *hiddenContent_create(int data_size);
+hidden_content *hidden_content_create(int data_size);
 
 void hidden_content_free(hidden_content **content);
 
 void hide_data(char *payload, char *image, char file_type);
 
-void extract_data(char *image, char *payload, char file_type);
+void unload_data(char *image, char *payload, char file_type);
+
+void manage_steg(char *payload, char *image, char switcher, char file_type);
 
 
 
