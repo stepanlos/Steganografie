@@ -44,7 +44,7 @@ int add_to_dictionary(dictionary *dictionary, char last, int parent) {
 
     if (dictionary->size >= DICTIONARY_SIZE){
         dictionary->size = ASCII_SIZE;
-        printf("Slovnik je plny, vracim se na zacatek\n");
+//        printf("Slovnik je plny, vracim se na zacatek\n");
     }
 
     // Přidání nového záznamu

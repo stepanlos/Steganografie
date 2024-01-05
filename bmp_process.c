@@ -247,10 +247,10 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
         shift += BGR * INT_BIT_SIZE;
     }
 
-    //výpis extracted_data_temp
-    for (int j = 0; j < SIGNATURE_SIZE; j++) {
-        printf("%d ",  extracted_data_temp[j]);
-    }
+//    //výpis extracted_data_temp
+//    for (int j = 0; j < SIGNATURE_SIZE; j++) {
+//        printf("%d ",  extracted_data_temp[j]);
+//    }
 
     //kontrola hlavičky, zda je na prvních 4 místech "KARI"
     if (extracted_data_temp[0] != 75 || extracted_data_temp[1] != 65 || extracted_data_temp[2] != 82 || extracted_data_temp[3] != 73) {
@@ -262,7 +262,7 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
 
 
     hidden_content *hidden = hidden_content_create(extracted_data_temp[4] + SIGNATURE_SIZE);
-    printf("hidden->hidden_data_size: %d\n", hidden->hidden_data_size);
+//    printf("hidden->hidden_data_size: %d\n", hidden->hidden_data_size);
 
     //načtení dat z extracted_data_temp do hidden_content
     for (int j = 0; j < SIGNATURE_SIZE; j++) {
@@ -275,8 +275,8 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
 //    }
 
     free(extracted_data_temp);
-    printf("shift = %d\n", shift);
-    printf("i = %d\n", i);
+//    printf("shift = %d\n", shift);
+//    printf("i = %d\n", i);
     //načtení dat z obrázku do hidden_content
     for(; i < hidden->hidden_data_size; i ++) {
         for (int j = 0; j < BGR * COMPRESSED_BIT_SIZE; j += BGR) {
@@ -284,7 +284,7 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
         }
         shift += BGR * COMPRESSED_BIT_SIZE;
     }
-    printf("i = %d\n", i);
+//    printf("i = %d\n", i);
 
 
     int *raw_data = (int *) malloc((hidden->hidden_data_size - SIGNATURE_SIZE) * sizeof(int));
@@ -298,10 +298,10 @@ hidden_content *unload_blue_bmp(bmp_organised *image) {
 
     //kontrola crc
     int crc_cntl = sumr_crc(raw_data, 0, hidden->hidden_data_size - SIGNATURE_SIZE);
-    printf("crc_cntl: %d\n", crc_cntl);
+//    printf("crc_cntl: %d\n", crc_cntl);
 
 
-    printf("crc_data: %d\n", crc_data);
+//    printf("crc_data: %d\n", crc_data);
     if(crc_cntl != crc_data) {
         printf("Error while extracting data from png file\n");
         exit_value = DAMAGED_HIDDEN_CONTENT;

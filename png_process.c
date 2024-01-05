@@ -172,14 +172,14 @@ int change_blue_png(png_organised *image, compressed *compressed_data) {
 
     if (data_size > image->width * image->height) {
         printf("Error: Image is too small for this data\n");
-        exit_value = INVALID_IMAGE_FORMAT;
+        exit_value = IMAGE_TOO_SMALL;
         return 0;
     }
 
-    //vypsání compressed_data
-    for (int i = 0; i < compressed_data->last_item; i++) {
-        printf("%d ", compressed_data->compressed[i]);
-    }
+//    //vypsání compressed_data
+//    for (int i = 0; i < compressed_data->last_item; i++) {
+//        printf("%d ", compressed_data->compressed[i]);
+//    }
 
     //zapsání signatury
     int i;
@@ -250,11 +250,11 @@ hidden_content *unload_blue_png(png_organised *image) {
         }
         shift += RGB * INT_BIT_SIZE_P;
     }
-
-    //výpis extracted_data_temp
-    for (int j = 0; j < SIGNATURE_SIZE_P; j++) {
-        printf("%d ",  extracted_data_temp[j]);
-    }
+//
+//    //výpis extracted_data_temp
+//    for (int j = 0; j < SIGNATURE_SIZE_P; j++) {
+//        printf("%d ",  extracted_data_temp[j]);
+//    }
     //kontrola hlavičky, zda je na prvních 4 místech "KARI"
     if (extracted_data_temp[0] != 75 || extracted_data_temp[1] != 65 || extracted_data_temp[2] != 82 || extracted_data_temp[3] != 73) {
         printf("Error: Invalid signature\n");
@@ -266,7 +266,7 @@ hidden_content *unload_blue_png(png_organised *image) {
 
 
     hidden_content *hidden = hidden_content_create(extracted_data_temp[4] + SIGNATURE_SIZE_P);
-    printf("hidden->hidden_data_size: %d\n", hidden->hidden_data_size);
+//    printf("hidden->hidden_data_size: %d\n", hidden->hidden_data_size);
 
     //načtení dat z extracted_data_temp do hidden_content
     for (int j = 0; j < SIGNATURE_SIZE_P; j++) {
@@ -274,8 +274,8 @@ hidden_content *unload_blue_png(png_organised *image) {
     }
 
     free(extracted_data_temp);
-    printf("shift = %d\n", shift);
-    printf("i = %d\n", i);
+//    printf("shift = %d\n", shift);
+//    printf("i = %d\n", i);
     //načtení dat z obrázku do hidden_content
     for(; i < hidden->hidden_data_size; i++) {
         for (int j = 0; j < RGB * COMPRESSED_BIT_SIZE_P; j += RGB) {
@@ -284,26 +284,26 @@ hidden_content *unload_blue_png(png_organised *image) {
         shift += RGB * COMPRESSED_BIT_SIZE_P;
     }
 
-    //výpis hidden->hidden_data
-    for (int j = 6; j < hidden->hidden_data_size; j++) {
-        printf("%d ", hidden->hidden_data[j]);
-    }
+//    //výpis hidden->hidden_data
+//    for (int j = 6; j < hidden->hidden_data_size; j++) {
+//        printf("%d ", hidden->hidden_data[j]);
+//    }
 
     int *raw_data = (int *) malloc((hidden->hidden_data_size - SIGNATURE_SIZE_P) * sizeof(int));
     for (int j = 6; j < hidden->hidden_data_size; j++) {
         raw_data[j - SIGNATURE_SIZE_P] = hidden->hidden_data[j];
     }
 
-    printf("hidden data size: %d\n", hidden->hidden_data_size);
+//    printf("hidden data size: %d\n", hidden->hidden_data_size);
     int crc_data = hidden->hidden_data[5];
     hidden->hidden_data[5] = 0;
 
     //kontrola crc
     int crc_cntl = sumr_crc(raw_data, 0, hidden->hidden_data_size - SIGNATURE_SIZE_P);
-    printf("crc_cntl: %d\n", crc_cntl);
+//    printf("crc_cntl: %d\n", crc_cntl);
 
 
-    printf("crc_data: %d\n", crc_data);
+//    printf("crc_data: %d\n", crc_data);
     if(crc_cntl != crc_data) {
         printf("Error while extracting data from png file\n");
         exit_value = DAMAGED_HIDDEN_CONTENT;
