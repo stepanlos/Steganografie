@@ -288,6 +288,16 @@ compressed *compress_lzw(char *filename){
         raw_data[j] = c->compressed[j + LENGTH_OF_SIGNATURE];
 //        printf("%d\n", j);
     }
+    //vypis raw dat
+    printf("raw data: ");
+    for (int j = 0; j < c->last_item - LENGTH_OF_SIGNATURE; j++) {
+        printf("%d ", raw_data[j]);
+    }
+
+    printf("\n");
+
+
+//    printf("c last intem: %d\n", c->last_item);
     int crc = sumr_crc(raw_data,0, c->last_item - LENGTH_OF_SIGNATURE);
 
     c->compressed[LENGTH_OF_SIGNATURE - 1] = crc;

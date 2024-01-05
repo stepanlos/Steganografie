@@ -7,6 +7,8 @@
 #include "io_manager.h"
 #include "png.h"
 #include "steg_manager.h"
+#include "string.h"
+#include "crc_check.h"
 
 
 
@@ -174,6 +176,11 @@ int change_blue_png(png_organised *image, compressed *compressed_data) {
         return 0;
     }
 
+    //vypsání compressed_data
+    for (int i = 0; i < compressed_data->last_item; i++) {
+        printf("%d ", compressed_data->compressed[i]);
+    }
+
     //zapsání signatury
     int i;
     for(i = 2; i < signature_size_b * RGB; i += RGB) {
@@ -248,6 +255,15 @@ hidden_content *unload_blue_png(png_organised *image) {
     for (int j = 0; j < SIGNATURE_SIZE_P; j++) {
         printf("%d ",  extracted_data_temp[j]);
     }
+    //kontrola hlavičky, zda je na prvních 4 místech "KARI"
+    if (extracted_data_temp[0] != 75 || extracted_data_temp[1] != 65 || extracted_data_temp[2] != 82 || extracted_data_temp[3] != 73) {
+        printf("Error: Invalid signature\n");
+        exit_value = NO_HIDDEN_DATA;
+        free(extracted_data_temp);
+        return NULL;
+    }
+
+
 
     hidden_content *hidden = hidden_content_create(extracted_data_temp[4] + SIGNATURE_SIZE_P);
     printf("hidden->hidden_data_size: %d\n", hidden->hidden_data_size);
@@ -267,6 +283,35 @@ hidden_content *unload_blue_png(png_organised *image) {
         }
         shift += RGB * COMPRESSED_BIT_SIZE_P;
     }
+
+    //výpis hidden->hidden_data
+    for (int j = 6; j < hidden->hidden_data_size; j++) {
+        printf("%d ", hidden->hidden_data[j]);
+    }
+
+    int *raw_data = (int *) malloc((hidden->hidden_data_size - SIGNATURE_SIZE_P) * sizeof(int));
+    for (int j = 6; j < hidden->hidden_data_size; j++) {
+        raw_data[j - SIGNATURE_SIZE_P] = hidden->hidden_data[j];
+    }
+
+    printf("hidden data size: %d\n", hidden->hidden_data_size);
+    int crc_data = hidden->hidden_data[5];
+    hidden->hidden_data[5] = 0;
+
+    //kontrola crc
+    int crc_cntl = sumr_crc(raw_data, 0, hidden->hidden_data_size - SIGNATURE_SIZE_P);
+    printf("crc_cntl: %d\n", crc_cntl);
+
+
+    printf("crc_data: %d\n", crc_data);
+    if(crc_cntl != crc_data) {
+        printf("Error while extracting data from png file\n");
+        exit_value = DAMAGED_HIDDEN_CONTENT;
+        hidden_content_free(&hidden);
+        return NULL;
+    }
+
+    free(raw_data);
 
     return hidden;
 }
