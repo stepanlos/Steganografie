@@ -53,7 +53,7 @@ png_organised *read_image_png(const char *filename) {
     png_byte color_type = png_get_color_type(png, info);
     png_byte bit_depth = png_get_bit_depth(png, info);
 
-    if (color_type != PNG_COLOR_TYPE_RGB || bit_depth != 8) {
+    if (color_type != PNG_COLOR_TYPE_RGB || bit_depth != CHAR_SIZE) {
         printf("Error while reading png file\n");
         exit_value = INVALID_IMAGE_FORMAT;
         fclose(file);
@@ -106,7 +106,7 @@ int save_image_png(png_organised *image, const char *filename) {
     if (file == NULL) {
         printf("Error while opening file\n");
         exit_value = INVALID_ARGS_OR_FILES;
-        return 0;
+        return FALSE;
     }
 
     png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -114,7 +114,7 @@ int save_image_png(png_organised *image, const char *filename) {
         printf("Error while creating png struct\n");
         exit_value = MALLOC_FAIL;
         fclose(file);
-        return 0;
+        return FALSE;
     }
 
     png_infop info = png_create_info_struct(png);
@@ -123,7 +123,7 @@ int save_image_png(png_organised *image, const char *filename) {
         exit_value = MALLOC_FAIL;
         fclose(file);
         png_destroy_write_struct(&png, NULL);
-        return 0;
+        return FALSE;
     }
 
     if (setjmp(png_jmpbuf(png))) {
@@ -131,7 +131,7 @@ int save_image_png(png_organised *image, const char *filename) {
         exit_value = INVALID_IMAGE_FORMAT;
         fclose(file);
         png_destroy_write_struct(&png, &info);
-        return 0;
+        return FALSE;
     }
 
     png_init_io(png, file);
@@ -151,7 +151,7 @@ int save_image_png(png_organised *image, const char *filename) {
     fclose(file);
     png_destroy_write_struct(&png, &info);
 
-    return 1;
+    return TRUE;
 }
 
 
@@ -173,7 +173,7 @@ int change_blue_png(png_organised *image, compressed *compressed_data) {
     if (data_size > image->width * image->height) {
         printf("Error: Image is too small for this data\n");
         exit_value = IMAGE_TOO_SMALL;
-        return 0;
+        return FALSE;
     }
 
 //    //vypsání compressed_data
@@ -183,7 +183,7 @@ int change_blue_png(png_organised *image, compressed *compressed_data) {
 
     //zapsání signatury
     int i;
-    for(i = 2; i < signature_size_b * RGB; i += RGB) {
+    for(i = BLUE_SHIFT_RGB; i < signature_size_b * RGB; i += RGB) {
 //        printf("Blue: %d =>", image->row_pointers[i]);
 //
 //        for (int bit = 7; bit >= 0; bit--) {
@@ -225,7 +225,7 @@ int change_blue_png(png_organised *image, compressed *compressed_data) {
         shift += COMPRESSED_BIT_SIZE_P * RGB;
     }
 
-    return 1;
+    return TRUE;
 }
 
 
@@ -243,7 +243,7 @@ hidden_content *unload_blue_png(png_organised *image) {
 
     //načtení signatury z obrázku do extracted_data_temp
     int i = 0;
-    int shift = 2;
+    int shift = BLUE_SHIFT_RGB;
     for(; i < SIGNATURE_SIZE_P; i ++) {
         for (int j = 0; j < RGB * INT_BIT_SIZE_P; j += RGB) {
             extracted_data_temp[i] |= (image->row_pointers[shift + j] & 0x1) << (j / RGB);
@@ -256,7 +256,7 @@ hidden_content *unload_blue_png(png_organised *image) {
 //        printf("%d ",  extracted_data_temp[j]);
 //    }
     //kontrola hlavičky, zda je na prvních 4 místech "KARI"
-    if (extracted_data_temp[0] != 75 || extracted_data_temp[1] != 65 || extracted_data_temp[2] != 82 || extracted_data_temp[3] != 73) {
+    if (extracted_data_temp[0] != CHAR_K || extracted_data_temp[1] != CHAR_A || extracted_data_temp[2] != CHAR_R || extracted_data_temp[3] != CHAR_I) {
         printf("Error: Invalid signature\n");
         exit_value = NO_HIDDEN_DATA;
         free(extracted_data_temp);
@@ -295,8 +295,8 @@ hidden_content *unload_blue_png(png_organised *image) {
     }
 
 //    printf("hidden data size: %d\n", hidden->hidden_data_size);
-    int crc_data = hidden->hidden_data[5];
-    hidden->hidden_data[5] = 0;
+    int crc_data = hidden->hidden_data[CRC_POSITON];
+    hidden->hidden_data[CRC_POSITON] = 0;
 
     //kontrola crc
     int crc_cntl = sumr_crc(raw_data, 0, hidden->hidden_data_size - SIGNATURE_SIZE_P);
@@ -315,23 +315,5 @@ hidden_content *unload_blue_png(png_organised *image) {
 
     return hidden;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
