@@ -67,7 +67,7 @@ void arg_check(int argc, char *argv[], char **image, char *switcher, char **payl
         exit_value = INVALID_IMAGE_FORMAT;
         return;
     }
-    if ((*image)[image_len - 4] == '.') {
+    if ((*image)[image_len - DOT_POS] == '.') {
         if ((*image)[image_len - 3] == 'p' && (*image)[image_len - 2] == 'n' && (*image)[image_len - 1] == 'g') {
             *image_type = 'p';
         } else if ((*image)[image_len - 3] == 'b' && (*image)[image_len - 2] == 'm' && (*image)[image_len - 1] == 'p') {

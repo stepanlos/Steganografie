@@ -6,7 +6,7 @@
 #include "dictionary.h"
 #include "io_manager.h"
 
-#define ASCII_SIZE 256
+
 
 /**
  * Funkce pro uvolnění slovníku
@@ -148,20 +148,10 @@ int free_dictionary(dictionary **dictionary) {
         return 0;
     }
 
+    free(*dictionary);
 
-//    for (int i = 0; i < DICTIONARY_SIZE; ++i) {
-//        free((*dictionary)->entries[i]);
-//
-//    }
-//    printf("pred\n");
-    // Uvolnění slovníku
-//    free((*dictionary)->entries);
-//    printf("po\n");
-    free(*dictionary); //tento radek se neprovede
-//    printf("po2\n");
     *dictionary = NULL;
 
-//    printf("Slovnik uvolnen\n");
 
     return 1;
 }

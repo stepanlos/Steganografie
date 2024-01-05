@@ -16,6 +16,8 @@
 #define FILE_READ_FAIL 8
 #define FILE_WRITE_FAIL 9
 
+#define DOT_POS 4
+
 
 extern int exit_value;
 
